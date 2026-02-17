@@ -42,7 +42,7 @@ def save_cloud_data(favs, inv, m_ing):
         "master_ingredients": m_ing + [""] * (max_len - len(m_ing))
     }
     df = pd.DataFrame(data)
-    conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Cocktail_DB", data=df)
+    conn.update(spreadsheet="1Jno6oVMteh_2uiII9nKl2uDDMuloyObRuMFRNpBCvhM", worksheet="Cocktail_DB", data=df)
     st.cache_data.clear()
 
 # --- JSON/API 関数 ---
