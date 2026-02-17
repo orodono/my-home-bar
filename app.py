@@ -19,7 +19,7 @@ DEFAULT_MASTER_ING = SPIRITS + ["Brandy", "Lemon Juice", "Lime Juice", "Sugar Sy
 st.set_page_config(page_title="Cloud Home Bar", page_icon="🍸", layout="wide")
 
 # --- スプレッドシート接続設定 ---
-conn = st.connection("gsheets", type=GSheetsConnection)
+# = st.connection("gsheets", type=GSheetsConnection)
 
 def load_cloud_data():
     """スプレッドシートからデータを読み込む"""
@@ -42,7 +42,7 @@ def save_cloud_data(favs, inv, m_ing):
         "master_ingredients": m_ing + [""] * (max_len - len(m_ing))
     }
     df = pd.DataFrame(data)
-    conn.update(spreadsheet="1Jno6oVMteh_2uiII9nKl2uDDMuloyObRuMFRNpBCvhM", worksheet="Cocktail_DB", data=df)
+    conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Cocktail_DB", data=df)
     st.cache_data.clear()
 
 # --- JSON/API 関数 ---
@@ -142,7 +142,7 @@ with st.sidebar:
         if ing_cols[idx % 2].button(f"{'✅' if is_selected else '➕'} {ing}", key=f"t_{ing}", type="primary" if is_selected else "secondary", use_container_width=True):
             if is_selected: current_inv.remove(ing)
             else: current_inv.append(ing)
-            save_cloud_data(favorites, current_inv, master_ingredients)
+  #          save_cloud_data(favorites, current_inv, master_ingredients)
             st.rerun()
     
     st.divider()
