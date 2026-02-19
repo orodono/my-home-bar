@@ -18,6 +18,9 @@ DEFAULT_MASTER_ING = SPIRITS + ["Brandy", "Lemon Juice", "Lime Juice", "Sugar Sy
 
 st.set_page_config(page_title="Cloud Home Bar", page_icon="🍸", layout="wide")
 
+# 20行目あたり（アプリの序盤）に追加
+if "current_inv" not in st.session_state:
+    st.session_state.current_inv = [] # 最初は空っぽ
 # --- スプレッドシート接続設定 ---
 # = st.connection("gsheets", type=GSheetsConnection)
 
@@ -116,9 +119,17 @@ def show_drink_details(detail, favorites, selected_ingredients):
 # --- メイン処理 ---
 st.title("🍸 My Home Bar: Cloud Edition")
 
-# 1. データの読み込み (クラウド優先)
-favorites, selected_inventory, master_ingredients = load_cloud_data()
-# カクテル図鑑（JSONファイル）
+# 1. データの管理（セッション状態を活用）
+if "master_ingredients" not in st.session_state:
+    f, s, m = load_cloud_data() # 最初だけ読み込み（失敗しても空リストが返る）
+    st.session_state.favorites = f
+    st.session_state.selected_inventory = s
+    st.session_state.master_ingredients = m
+
+favorites = st.session_state.favorites
+selected_inventory = st.session_state.selected_inventory
+master_ingredients = st.session_state.master_ingredients
+
 local_db = load_json(DB_FILE, default_value={})
 
 tab1, tab2, tab3 = st.tabs(["🔍 探す", "❤️ お気に入り", "📝 登録"])
@@ -129,26 +140,30 @@ with st.sidebar:
         new_ing = st.text_input("材料名")
         if st.button("追加"):
             if new_ing and new_ing not in master_ingredients:
-                master_ingredients.append(new_ing)
-                save_cloud_data(favorites, selected_inventory, master_ingredients)
+                st.session_state.master_ingredients.append(new_ing)
+                # save_cloud_data(...) # 保存は一旦お休み
                 st.rerun()
 
     st.write("📦 **在庫タイル**")
     sorted_master = sorted(master_ingredients, key=lambda x: (x not in SPIRITS, x))
-    current_inv = list(selected_inventory)
+    
     ing_cols = st.columns(2)
     for idx, ing in enumerate(sorted_master):
-        is_selected = ing in current_inv
-        if ing_cols[idx % 2].button(f"{'✅' if is_selected else '➕'} {ing}", key=f"t_{ing}", type="primary" if is_selected else "secondary", use_container_width=True):
-            if is_selected: current_inv.remove(ing)
-            else: current_inv.append(ing)
-  #          save_cloud_data(favorites, current_inv, master_ingredients)
+        is_selected = ing in selected_inventory
+        if ing_cols[idx % 2].button(f"{'✅' if is_selected else '➕'} {ing}", 
+                                     key=f"t_{ing}", 
+                                     type="primary" if is_selected else "secondary", 
+                                     use_container_width=True):
+            if is_selected:
+                st.session_state.selected_inventory.remove(ing)
+            else:
+                st.session_state.selected_inventory.append(ing)
             st.rerun()
     
     st.divider()
     search_query = st.text_input("名前検索")
     alc_level = st.select_slider("度数:", options=["All", "Low/None", "Medium", "High"], value="All")
-
+    
 with tab1:
     if current_inv:
         inv_lower = [i.lower() for i in current_inv]
