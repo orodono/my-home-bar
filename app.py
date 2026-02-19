@@ -19,8 +19,8 @@ DEFAULT_MASTER_ING = SPIRITS + ["Brandy", "Lemon Juice", "Lime Juice", "Sugar Sy
 st.set_page_config(page_title="Cloud Home Bar", page_icon="🍸", layout="wide")
 
 # 20行目あたり（アプリの序盤）に追加
-if "current_inv" not in st.session_state:
-    st.session_state.current_inv = [] # 最初は空っぽ
+if "selected_inventory" not in st.session_state:
+    st.session_state.selected_inventory = [] # 最初は空っぽ
 # --- スプレッドシート接続設定 ---
 # = st.connection("gsheets", type=GSheetsConnection)
 
@@ -163,10 +163,10 @@ with st.sidebar:
     st.divider()
     search_query = st.text_input("名前検索")
     alc_level = st.select_slider("度数:", options=["All", "Low/None", "Medium", "High"], value="All")
-    
+
 with tab1:
-    if current_inv:
-        inv_lower = [i.lower() for i in current_inv]
+    if selected_inventory:
+        inv_lower = [i.lower() for i in selected_inventory]
         results = []
         for d_info in local_db.values():
             match_found = False
@@ -177,13 +177,13 @@ with tab1:
             if match_found: results.append(d_info)
         
         filtered = [d for d in results if (not search_query or search_query.lower() in d['strDrink'].lower()) and (alc_level == "All" or estimate_strength(d) == alc_level)]
-        sorted_list = sorted(filtered, key=lambda x: (-get_match_score(x, current_inv), 0 if x['strDrink'] in favorites else 1))
+        sorted_list = sorted(filtered, key=lambda x: (-get_match_score(x, selected_inventory), 0 if x['strDrink'] in favorites else 1))
 
         if not sorted_list: st.warning("DBにカクテルがありません。ローカルで全件同期したcocktail_master.jsonをGitHubに上げてください。")
         else:
             cols = st.columns(2)
             for idx, drink in enumerate(sorted_list[:24]):
-                with cols[idx % 2]: render_cocktail_card(drink, "sc", favorites, current_inv)
+                with cols[idx % 2]: render_cocktail_card(drink, "sc", favorites, selected_inventory)
     else:
         st.info("在庫を選択してください。")
 
@@ -193,7 +193,7 @@ with tab2:
     if fav_list:
         cols = st.columns(2)
         for idx, drink in enumerate(fav_list):
-            with cols[idx % 2]: render_cocktail_card(drink, "fv", favorites, current_inv)
+            with cols[idx % 2]: render_cocktail_card(drink, "fv", favorites, selected_inventory)
 
 with tab3:
     st.write("マイレシピ機能はスプレッドシートの構造上、次のアップデートで対応予定です！")
